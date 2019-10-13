@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using Microsoft.Extensions.DependencyInjection;
 using VkNet;
 using VkNet.AudioBypassService.Extensions;
@@ -14,29 +15,65 @@ namespace VK_TelegramBot
         private VkApi _api;
         private string _login;
         private string _password;
+        public static bool _auth = true;
 
-        public Account(string login, string password)
+        public Account()
+        {
+        }
+
+        public void Login(string login, string password)
         {
             _login = login;
             _password = password;
+            try
+            {
+                var service = new ServiceCollection();
+                service.AddAudioBypass();
+
+                _api = new VkApi(service);
+
+                _api.Authorize(new ApiAuthParams
+                {
+                    ApplicationId = 7168291,
+                    Login = _login,
+                    Password = _password,
+                    Settings = Settings.All                   
+                });
+
+                _api.Account.SetOffline();
+                _auth = false;
+            } catch (VkNet.Exception.CaptchaNeededException cne)
+            {
+                var csid = cne.Sid;
+                string captchaUrl = cne.Img.AbsoluteUri;
+                Console.WriteLine(captchaUrl);
+                Console.Write("Введите капчу: ");
+                var captchKey = Console.ReadLine();
+                _api.Authorize(new ApiAuthParams
+                {
+                    ApplicationId = 7168291,
+                    Login = _login,
+                    Password = _password,
+                    Settings = Settings.All,
+                    CaptchaKey = captchKey,
+                    CaptchaSid = csid
+                });
+            }
         }
 
-        public void Login()
+        public void GetMessages(long id)
         {
-            var service = new ServiceCollection();
-            service.AddAudioBypass();
-
-            _api = new VkApi(service);
-
-            _api.Authorize(new ApiAuthParams
+            var mes = _api.Messages.GetHistory(new MessagesGetHistoryParams
             {
-                ApplicationId = 7168291,
-                Login = "login",
-                Password = "password",
-                Settings = Settings.All
+                UserId = id,
+                Count = 10
             });
 
-            _api.Account.SetOffline();
+            foreach (var item in mes.Messages)
+            {
+                var us = _api.Users.Get(new long[] { (long)item.FromId }, ProfileFields.All);
+                Console.WriteLine(us[0].FirstName + " : " + item.Text);
+            }
         }
     }
 }
