@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using VkNet;
 using VkNet.AudioBypassService.Extensions;
 using VkNet.Enums.Filters;
+using VkNet.Enums.SafetyEnums;
 using VkNet.Model;
 using VkNet.Model.RequestParams;
 
@@ -15,7 +16,6 @@ namespace VK_TelegramBot
         private VkApi _api;
         private string _login;
         private string _password;
-        public static bool _auth = true;
 
         public Account()
         {
@@ -41,7 +41,6 @@ namespace VK_TelegramBot
                 });
 
                 _api.Account.SetOffline();
-                _auth = false;
             } catch (VkNet.Exception.CaptchaNeededException cne)
             {
                 var csid = cne.Sid;
@@ -73,6 +72,26 @@ namespace VK_TelegramBot
             {
                 var us = _api.Users.Get(new long[] { (long)item.FromId }, ProfileFields.All);
                 Console.WriteLine(us[0].FirstName + " : " + item.Text);
+            }
+        }
+
+        public void GetConversations(int count)
+        {
+            var con = _api.Messages.GetConversations(new GetConversationsParams
+            {
+                Count = (ulong?)count
+            });
+
+            foreach (var item in con.Items)
+            {
+                if(item.Conversation.Peer.Type == ConversationPeerType.User)
+                {
+                    var us = _api.Users.Get(new long[] { (long)item.Conversation.Peer.Id }, ProfileFields.LastName);
+                    Console.WriteLine(us[0].LastName + " : " + item.LastMessage.Text);
+                } else if (item.Conversation.Peer.Type == ConversationPeerType.Chat)
+                {
+                    Console.WriteLine("chat");
+                }
             }
         }
     }
