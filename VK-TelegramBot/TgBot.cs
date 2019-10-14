@@ -20,28 +20,16 @@ namespace VK_TelegramBot
         static async void Bot_OnMessage(object sender, MessageEventArgs e)
         {
             var rmu = new ReplyKeyboardMarkup();
-            rmu.Keyboard =
-                new KeyboardButton[][]
-                {
-                    new KeyboardButton[]
-                    {
-                        new KeyboardButton("login")
-                    },
-                    new KeyboardButton[]
-                    {
-                        new KeyboardButton("info")
-                    }
-                };
-            if (e.Message.Text != null)
-            {
-                Console.WriteLine($"Received a text message in chat {e.Message.Chat.Id}.");
 
-                await telegramBot.SendTextMessageAsync(
-                  chatId: e.Message.Chat,
-                  text: "You said:\n" + e.Message.Text,
-                  replyMarkup: rmu                 
-                );
-            }
+            var answer = Commander.GetAnswer(e.Message.Text, e.Message.Chat.Id);
+            
+            Console.WriteLine($"Message from {e.Message.Chat.Id} : {e.Message.Chat.Id}");
+
+            await telegramBot.SendTextMessageAsync(
+              chatId: e.Message.Chat,
+              text: answer                             
+            );
+            
         }
     }
 }

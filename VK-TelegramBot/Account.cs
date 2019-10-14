@@ -75,24 +75,27 @@ namespace VK_TelegramBot
             }
         }
 
-        public void GetConversations(int count)
+        public string GetConversations(int count)
         {
             var con = _api.Messages.GetConversations(new GetConversationsParams
             {
                 Count = (ulong?)count
             });
 
+            string answer = "";
+
             foreach (var item in con.Items)
             {
                 if(item.Conversation.Peer.Type == ConversationPeerType.User)
                 {
                     var us = _api.Users.Get(new long[] { (long)item.Conversation.Peer.Id }, ProfileFields.LastName);
-                    Console.WriteLine(us[0].LastName + " : " + item.LastMessage.Text);
+                    answer += us[0].LastName + " : " + item.LastMessage.Text + "\n";
                 } else if (item.Conversation.Peer.Type == ConversationPeerType.Chat)
                 {
-                    Console.WriteLine("chat");
+                    
                 }
             }
+            return answer;
         }
     }
 }
