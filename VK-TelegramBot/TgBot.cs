@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Threading;
 using Telegram.Bot;
 using Telegram.Bot.Args;
@@ -19,17 +20,34 @@ namespace VK_TelegramBot
 
         static async void Bot_OnMessage(object sender, MessageEventArgs e)
         {
-            var rmu = new ReplyKeyboardMarkup();
-
-            var answer = Commander.GetAnswer(e.Message.Text, e.Message.Chat.Id);
-            
-            Console.WriteLine($"Message from {e.Message.Chat.Id} : {e.Message.Chat.Id}");
-
-            await telegramBot.SendTextMessageAsync(
-              chatId: e.Message.Chat,
-              text: answer                             
-            );
-            
+            Console.WriteLine($"Message from {e.Message.Chat.Id} : {e.Message.Text}");
+            var answer = "";
+            if (e.Message.Text != null)
+            {
+                answer = Commander.GetAnswer(e.Message.Text, e.Message.Chat.Id);
+                await telegramBot.SendTextMessageAsync(
+                        chatId: e.Message.Chat,
+                        text: answer
+                    );
+            } else
+            {
+                if (e.Message.Sticker != null)
+                {
+                    answer = ".!.";
+                    await telegramBot.SendTextMessageAsync(
+                        chatId: e.Message.Chat,
+                        text: answer
+                    );
+                }
+                else
+                {
+                    await telegramBot.SendPhotoAsync(
+                        chatId: e.Message.Chat,
+                        photo: "http://portal.tpu.ru/foto/21377.jpg"
+                    );
+                }
+            }         
         }
+
     }
 }

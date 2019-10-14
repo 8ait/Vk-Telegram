@@ -92,8 +92,7 @@ namespace VK_TelegramBot
                     answer += us[0].LastName + " : " + item.LastMessage.Text + "\n";
                 } else if (item.Conversation.Peer.Type == ConversationPeerType.Chat)
                 {
-                    var ch = _api.Messages.GetChat(item.Conversation.Peer.Id);
-                    answer += ch.Title + " : " + item.LastMessage.Text + "\n";
+                    answer += "Это чат: " + item.LastMessage.Text + "\n";
                 }
             }
             return answer;
