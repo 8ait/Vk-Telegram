@@ -83,18 +83,29 @@ namespace VK_TelegramBot
             });
 
             string answer = "";
-
+            string line = "-----------\n";
             foreach (var item in con.Items)
             {
+                answer += line;
                 if(item.Conversation.Peer.Type == ConversationPeerType.User)
                 {
                     var us = _api.Users.Get(new long[] { (long)item.Conversation.Peer.Id }, ProfileFields.LastName);
-                    answer += us[0].LastName + " : " + item.LastMessage.Text + "\n";
+                    if (us[0].Id == _api.UserId)
+                    {
+                        answer += us[0].LastName + " : " + " (Вы) " + item.LastMessage.Text + "\n";
+                    } else
+                    {
+                        answer += us[0].LastName + item.LastMessage.Text + "\n";
+                    }
+                    
                 } else if (item.Conversation.Peer.Type == ConversationPeerType.Chat)
                 {
-                    answer += "Это чат: " + item.LastMessage.Text + "\n";
+                    long id = item.Conversation.Peer.Id - 2000000000;
+                    var ch = _api.Messages.GetChat(id);
+                    answer += ch.Title + " : " + item.LastMessage.Text + "\n";
                 }
             }
+            answer += line;
             return answer;
         }
     }
