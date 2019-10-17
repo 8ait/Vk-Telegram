@@ -65,7 +65,7 @@ namespace VK_TelegramBot
         public string GetMessages(int id, int count)
         {
             string answer = "";
-            if (_dialogIds.Count != 0)
+            if ( id < _dialogIds.Count)
             {
                 string line = "-----------------------------------\n";
 
@@ -77,8 +77,9 @@ namespace VK_TelegramBot
 
                 foreach (var item in mes.Messages)
                 {
+                    string body = "";
                     var us = _api.Users.Get(new long[] { (long)item.FromId }, ProfileFields.All);
-                    answer = us[0].FirstName + " : " + item.Text + "\n" + answer;
+                    answer = us[0].FirstName + " : " + item.Text + body +"\n" + answer;
                     answer = line + answer;
                 }
 
@@ -106,14 +107,15 @@ namespace VK_TelegramBot
             {
                 answer += line;
                 if (item.Conversation.Peer.Type == ConversationPeerType.User)
-                { 
+                {
+                    string body = "";
                     var us = _api.Users.Get(new long[] { (long)item.Conversation.Peer.Id }, ProfileFields.LastName);
                     if (item.LastMessage.FromId == _api.UserId)
                     {
-                        answer += "[" + index + "] " + us[0].LastName + " : " + " (Вы) " + item.LastMessage.Text + "\n";
+                        answer += "[" + index + "] " + us[0].LastName + " : " + " (Вы) " + body +item.LastMessage.Text + "\n";
                     } else
                     {
-                        answer += "[" + index + "] " + us[0].LastName + " : " + item.LastMessage.Text + "\n";
+                        answer += "[" + index + "] " + us[0].LastName + " : " + body + item.LastMessage.Text + "\n";
                     }
                     
                 } else if (item.Conversation.Peer.Type == ConversationPeerType.Chat)
@@ -121,14 +123,15 @@ namespace VK_TelegramBot
 
                     long id = item.Conversation.Peer.Id - 2000000000;
                     var ch = _api.Messages.GetChat(id);
+                    string body = "";
                     if (item.LastMessage.FromId == _api.UserId)
                     {
-                        answer += "[" + index + "] " + ch.Title + " : " + " (Вы) "+ item.LastMessage.Text + "\n";
+                        answer += "[" + index + "] " + ch.Title + " : " + " (Вы) " + body + item.LastMessage.Text + "\n";
                     }
                     else
                     {
                         var us = _api.Users.Get(new long[] { (long)item.LastMessage.FromId }, ProfileFields.LastName);
-                        answer += "[" + index + "] " + ch.Title + " : " + "("+ us[0].LastName +") " + item.LastMessage.Text + "\n";
+                        answer += "[" + index + "] " + ch.Title + " : " + "("+ us[0].LastName +") " + body + item.LastMessage.Text + "\n";
                     }
                 }
                 _dialogIds.Add(item.Conversation.Peer.Id);
