@@ -65,21 +65,28 @@ namespace VK_TelegramBot
         public string GetMessages(int id, int count)
         {
             string answer = "";
-            string line = "-----------------------------------\n";
-
-            var mes = _api.Messages.GetHistory(new MessagesGetHistoryParams
+            if (_dialogIds.Count != 0)
             {
-                UserId = _dialogIds[id],
-                Count = count
-            });
+                string line = "-----------------------------------\n";
 
-            foreach (var item in mes.Messages)
+                var mes = _api.Messages.GetHistory(new MessagesGetHistoryParams
+                {
+                    UserId = _dialogIds[id],
+                    Count = count
+                });
+
+                foreach (var item in mes.Messages)
+                {
+                    var us = _api.Users.Get(new long[] { (long)item.FromId }, ProfileFields.All);
+                    answer = us[0].FirstName + " : " + item.Text + "\n" + answer;
+                    answer = line + answer;
+                }
+
+                answer += line;
+            } else
             {
-                var us = _api.Users.Get(new long[] { (long)item.FromId }, ProfileFields.All);
-                answer = us[0].FirstName + " : " + item.Text + "\n" + answer;
-                answer = line + answer;
+                answer = "Выведи диалоги";
             }
-            answer += line;
             return answer;
         }
 
