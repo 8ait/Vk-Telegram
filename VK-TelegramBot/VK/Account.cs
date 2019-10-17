@@ -16,9 +16,11 @@ namespace VK_TelegramBot
         private VkApi _api;
         private string _login;
         private string _password;
+        private List<long> _dialogIds;
 
         public Account()
         {
+            _dialogIds = new List<long>();
         }
 
         public void Login(string login, string password)
@@ -60,50 +62,70 @@ namespace VK_TelegramBot
             }
         }
 
-        public void GetMessages(long id)
+        public string GetMessages(int id, int count)
         {
+            string answer = "";
+            string line = "-----------------------------------\n";
+
             var mes = _api.Messages.GetHistory(new MessagesGetHistoryParams
             {
-                UserId = id,
-                Count = 10
+                UserId = _dialogIds[id],
+                Count = count
             });
 
             foreach (var item in mes.Messages)
             {
                 var us = _api.Users.Get(new long[] { (long)item.FromId }, ProfileFields.All);
-                Console.WriteLine(us[0].FirstName + " : " + item.Text);
+                answer = us[0].FirstName + " : " + item.Text + "\n" + answer;
+                answer = line + answer;
             }
+            answer += line;
+            return answer;
         }
 
         public string GetConversations(int count)
         {
+            _dialogIds.Clear();
+
             var con = _api.Messages.GetConversations(new GetConversationsParams
             {
                 Count = (ulong?)count
             });
 
             string answer = "";
-            string line = "-----------\n";
+            string line = "-----------------------------------\n";
+            int index = 0;
             foreach (var item in con.Items)
             {
                 answer += line;
-                if(item.Conversation.Peer.Type == ConversationPeerType.User)
-                {
+                if (item.Conversation.Peer.Type == ConversationPeerType.User)
+                { 
                     var us = _api.Users.Get(new long[] { (long)item.Conversation.Peer.Id }, ProfileFields.LastName);
-                    if (us[0].Id == _api.UserId)
+                    if (item.LastMessage.FromId == _api.UserId)
                     {
-                        answer += us[0].LastName + " : " + " (Вы) " + item.LastMessage.Text + "\n";
+                        answer += "[" + index + "] " + us[0].LastName + " : " + " (Вы) " + item.LastMessage.Text + "\n";
                     } else
                     {
-                        answer += us[0].LastName + item.LastMessage.Text + "\n";
+                        answer += "[" + index + "] " + us[0].LastName + " : " + item.LastMessage.Text + "\n";
                     }
                     
                 } else if (item.Conversation.Peer.Type == ConversationPeerType.Chat)
                 {
+
                     long id = item.Conversation.Peer.Id - 2000000000;
                     var ch = _api.Messages.GetChat(id);
-                    answer += ch.Title + " : " + item.LastMessage.Text + "\n";
+                    if (item.LastMessage.FromId == _api.UserId)
+                    {
+                        answer += "[" + index + "] " + ch.Title + " : " + " (Вы) "+ item.LastMessage.Text + "\n";
+                    }
+                    else
+                    {
+                        var us = _api.Users.Get(new long[] { (long)item.LastMessage.FromId }, ProfileFields.LastName);
+                        answer += "[" + index + "] " + ch.Title + " : " + "("+ us[0].LastName +") " + item.LastMessage.Text + "\n";
+                    }
                 }
+                _dialogIds.Add(item.Conversation.Peer.Id);
+                index++;
             }
             answer += line;
             return answer;
